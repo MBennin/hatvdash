@@ -2,7 +2,6 @@ package com.matthewbennin.hatvdash.ui.cards
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -15,7 +14,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.matthewbennin.hatvdash.MdiIconManager
 import org.json.JSONObject
 
 @Composable
@@ -32,11 +30,11 @@ fun ButtonCard(
     val context = LocalContext.current
     var iconBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
-    LaunchedEffect(mdiIcon) {
-        MdiIconManager.loadOrFetchIcon(context, mdiIcon) {
-            iconBitmap = it
-        }
-    }
+//    LaunchedEffect(mdiIcon) {
+//        MdiIconManager.loadOrFetchIcon(context, MaterialTheme.colorScheme.primary.toArgb(), mdiIcon) {
+//            iconBitmap = it
+//        }
+//    }
 
     Card(
         modifier = modifier

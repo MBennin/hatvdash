@@ -35,12 +35,13 @@ object MdiIconManager {
     fun loadOrFetchIcon(
         context: Context,
         mdi: String,
+        tintColor: Int,
         onIconReady: (Bitmap?) -> Unit
     ) {
         val file = getCachedIconFile(context, mdi)
 
         if (file.exists()) {
-            renderSvgToBitmap(file, onIconReady)
+            renderSvgToBitmap(file, tintColor, onIconReady)
             return
         }
 
@@ -59,7 +60,7 @@ object MdiIconManager {
                             input.copyTo(output)
                         }
                     }
-                    renderSvgToBitmap(file, onIconReady)
+                    renderSvgToBitmap(file, tintColor, onIconReady)
                 } else {
                     Log.e("MdiIconManager", "SVG fetch failed: HTTP ${connection.responseCode}")
                     onIconReady(null)
@@ -72,7 +73,7 @@ object MdiIconManager {
         }
     }
 
-    private fun renderSvgToBitmap(file: File, callback: (Bitmap?) -> Unit) {
+    private fun renderSvgToBitmap(file: File, tintColor: Int, callback: (Bitmap?) -> Unit) {
         try {
             val svg = SVG.getFromInputStream(file.inputStream())
             svg.setDocumentWidth("${ICON_WIDTH}px")
@@ -88,7 +89,7 @@ object MdiIconManager {
             val tintCanvas = Canvas(tinted)
             val paint = android.graphics.Paint().apply {
                 colorFilter = android.graphics.PorterDuffColorFilter(
-                    Color.rgb(68, 115, 158),  // Primary Blue
+                    tintColor,  // Primary Blue
                     android.graphics.PorterDuff.Mode.SRC_IN
                 )
             }

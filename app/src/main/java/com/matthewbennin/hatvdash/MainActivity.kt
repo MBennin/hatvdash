@@ -1,5 +1,6 @@
 package com.matthewbennin.hatvdash
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,8 +9,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.matthewbennin.hatvdash.model.DashboardPanel
 import com.matthewbennin.hatvdash.network.HaWebSocketManager
 import com.matthewbennin.hatvdash.network.HomeAssistantConfig
+import com.matthewbennin.hatvdash.ui.launchscreen.DashboardListScreen
+import com.matthewbennin.hatvdash.ui.theme.HATVDashTheme
+import com.matthewbennin.hatvdash.MdiIconManager
 import org.json.JSONArray
 
 class MainActivity : ComponentActivity() {
@@ -17,35 +22,47 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Connect to WebSocket on startup
         HaWebSocketManager.connect(
             baseUrl = HomeAssistantConfig.BASE_URL,
             token = HomeAssistantConfig.TOKEN
         )
 
+
         setContent {
-            MaterialTheme {
-                var dashboardTitles by remember { mutableStateOf<List<String>>(emptyList()) }
+            HATVDashTheme(isInDarkTheme = false) {
+                var dashboardPanels by remember { mutableStateOf<List<DashboardPanel>>(emptyList()) }
                 var error by remember { mutableStateOf<String?>(null) }
 
                 LaunchedEffect(Unit) {
                     HaWebSocketManager.requestLovelaceJson { config ->
                         val views = config.optJSONArray("views") ?: JSONArray()
-                        val titles = mutableListOf<String>()
+                        val dashboards = mutableListOf<DashboardPanel>()
+
                         for (i in 0 until views.length()) {
-                            titles.add(views.getJSONObject(i).optString("title", "Unnamed"))
+                            val view = views.getJSONObject(i)
+                            dashboards.add(
+                                DashboardPanel(
+                                    title = view.optString("title", "Unnamed"),
+                                    urlPath = view.optString("path", ""),
+                                    icon = view.optString("icon", "mdi:view-dashboard")
+                                )
+                            )
                         }
 
+                        val context = this@MainActivity
+                        val iconMap = mutableMapOf<String, Bitmap?>()
+
+                        dashboardPanels = dashboards.toList()
+
                         runOnUiThread {
-                            println("Updating dashboardTitles with ${titles.size} items")
-                            dashboardTitles = titles.toList()
+                            dashboardPanels = dashboards.toList()
                         }
                     }
                 }
 
                 Scaffold(
                     topBar = {
-                        TopAppBar(title = { Text("Dashboard Fetcher") })
+                        TopAppBar(title = { Text("Select a Dashboard") })
                     }
                 ) { padding ->
                     Column(
@@ -54,13 +71,15 @@ class MainActivity : ComponentActivity() {
                             .padding(16.dp)
                             .fillMaxSize()
                     ) {
-                        if (dashboardTitles.isEmpty()) {
+                        if (dashboardPanels.isEmpty()) {
                             Text("Loading dashboards...")
                         } else {
-                            Text("Loaded ${dashboardTitles.size} dashboards")
-                            dashboardTitles.forEach { title ->
-                                Text(text = title, style = MaterialTheme.typography.bodyLarge)
-                            }
+                            DashboardListScreen(
+                                dashboards = dashboardPanels,
+                                onDashboardSelected = { selected ->
+                                    // TODO: Save selected dashboard and render it
+                                }
+                            )
                         }
 
                         error?.let {
