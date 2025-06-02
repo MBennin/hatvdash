@@ -40,8 +40,13 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.6.4" // match Compose version
     }
-}
 
+    packaging {
+        resources {
+            excludes += "/src/main/res/xml/network_security_config.xml.template"
+        }
+    }
+}
 
 
 dependencies {
@@ -67,5 +72,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     implementation(libs.androidsvg)
+
+    implementation(libs.okhttp)
 
 }

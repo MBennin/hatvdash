@@ -1,0 +1,13 @@
+package com.matthewbennin.hatvdash.network
+
+/**
+ * Template for HomeAssistantConfig.kt
+ *
+ * Replace the BASE_URL and TOKEN with your actual Home Assistant values.
+ * Save as HomeAssistantConfig.kt and do NOT commit the real file to Git.
+ */
+
+object HomeAssistantConfig {
+    const val BASE_URL = "http://<YOUR_HOME_ASSISTANT_IP>:8123"
+    const val TOKEN = "<YOUR_LONG_LIVED_ACCESS_TOKEN>"
+}

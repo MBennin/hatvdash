@@ -36,3 +36,5 @@ Thumbs.db
 # Other build artifacts
 captures/
 out/
+/app/src/main/java/com/matthewbennin/hatvdash/network/HomeAssistantConfig.kt
+/app/src/main/res/xml/network_security_config.xml

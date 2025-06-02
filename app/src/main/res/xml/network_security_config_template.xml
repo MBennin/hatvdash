@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Template for network_security_config.xml
+  Replace YOUR_HOME_ASSISTANT_IP_ADDRESS with your actual HA IP,
+  save as res/xml/network_security_config.xml, and exclude from Git.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">YOUR_HOME_ASSISTANT_IP_ADDRESS</domain>
+    </domain-config>
+</network-security-config>
