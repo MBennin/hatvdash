@@ -1,0 +1,4 @@
+<resources>
+
+    <style name="Theme.HATVDash" parent="Theme.AppCompat.DayNight.NoActionBar" />
+</resources>

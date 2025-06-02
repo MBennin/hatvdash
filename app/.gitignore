@@ -1,0 +1,29 @@
+# Android/IntelliJ specific
+.idea/
+*.iml
+.gradle/
+build/
+captures/
+local.properties
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Kotlin/Java
+out/
+
+# Compose previews (if any get generated)
+*.preview.json
+
+# Optional: Jetpack Compose compiler cache (safe to ignore)
+.kotlinc/
+
+# Optional: if you add crashlytics or analytics later
+firebase/
+
+# Optional: ignore generated test reports
+test-results/
