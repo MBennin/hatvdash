@@ -1,25 +1,46 @@
 package com.matthewbennin.hatvdash.ui.launchscreen
 
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.matthewbennin.hatvdash.model.DashboardPanel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardListScreen(
     dashboards: List<DashboardPanel>,
-    onDashboardSelected: (DashboardPanel) -> Unit
+    onDashboardSelected: (DashboardPanel) -> Unit,
+    onSettingsClicked: () -> Unit
 ) {
-
-    LazyColumn {
-        itemsIndexed(dashboards) { index, dashboard ->
-            DashboardCard(
-                title = dashboard.title,
-                mdiIcon = dashboard.icon ?: "mdi:view-dashboard",
-                onClick = { onDashboardSelected(dashboard) }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Select a Dashboard") },
+                actions = {
+                    IconButton(onClick = onSettingsClicked) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
+                }
             )
         }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+        ) {
+            dashboards.forEach { panel ->
+                DashboardCard(
+                    title = panel.title,
+                    mdiIcon = panel.icon ?: "mdi:view-dashboard",
+                    onClick = { onDashboardSelected(panel) }
+                )
+            }
+        }
     }
-
-    // Optional: Add D-pad key events to shift `selectedIndex`
 }

@@ -1,4 +1,4 @@
-package com.matthewbennin.hatvdash.renderers
+package com.matthewbennin.hatvdash.utils
 
 import androidx.compose.runtime.Composable
 import com.matthewbennin.hatvdash.ui.cards.ButtonCard
