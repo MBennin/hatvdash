@@ -23,8 +23,8 @@ object SectionsRenderer {
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            for (i in 0 until sections.length()) {
-                val section = sections.getJSONObject(i)
+            (0 until sections.length()).forEach { index ->
+                val section = sections.optJSONObject(index) ?: return@forEach
                 RenderGridSection(section)
             }
         }
@@ -35,6 +35,8 @@ object SectionsRenderer {
         val cards = sectionJson.optJSONArray("cards") ?: JSONArray()
         val columnSpan = sectionJson.optInt("column_span", 2)
 
+        val cardList = List(cards.length()) { i -> cards.getJSONObject(i) }
+
         LazyVerticalGrid(
             columns = GridCells.Fixed(columnSpan),
             contentPadding = PaddingValues(4.dp),
@@ -42,7 +44,7 @@ object SectionsRenderer {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            items((0 until cards.length()).map { cards.getJSONObject(it) }) { cardJson ->
+            items(cardList) { cardJson ->
                 CardRouter.RenderCard(cardJson)
             }
         }

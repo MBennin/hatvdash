@@ -11,9 +11,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.matthewbennin.hatvdash.MdiIconManager
 import org.json.JSONObject
 
 @Composable
@@ -28,13 +30,15 @@ fun ButtonCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val tintColor = MaterialTheme.colorScheme.primary.toArgb()
     var iconBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
-//    LaunchedEffect(mdiIcon) {
-//        MdiIconManager.loadOrFetchIcon(context, MaterialTheme.colorScheme.primary.toArgb(), mdiIcon) {
-//            iconBitmap = it
-//        }
-//    }
+
+    LaunchedEffect(mdiIcon) {
+        MdiIconManager.loadOrFetchIcon(context, mdiIcon, tintColor) {
+            iconBitmap = it
+        }
+    }
 
     Card(
         modifier = modifier
@@ -94,7 +98,7 @@ fun ButtonCard(cardJson: JSONObject) {
         longAction = longAction,
         doubleAction = doubleAction,
         onAction = { actionJson ->
-            // TODO: Replace with real action logic
+            // TODO: Hook into real Home Assistant command dispatcher
             println("Executing action: ${actionJson?.toString()}")
         }
     )

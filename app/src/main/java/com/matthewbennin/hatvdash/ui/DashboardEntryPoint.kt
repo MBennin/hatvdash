@@ -3,7 +3,6 @@ package com.matthewbennin.hatvdash.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import com.matthewbennin.hatvdash.network.HaWebSocketManager
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,6 +14,7 @@ import com.matthewbennin.hatvdash.data.DashboardRepository
 import com.matthewbennin.hatvdash.navigation.AppScreen
 import com.matthewbennin.hatvdash.ui.dashboardscreen.DashboardViewScreen
 import com.matthewbennin.hatvdash.ui.settings.SettingsScreen
+import org.json.JSONObject
 
 @Composable
 fun DashboardEntryPoint() {
@@ -23,10 +23,13 @@ fun DashboardEntryPoint() {
     var dashboardPanels by remember { mutableStateOf<List<DashboardPanel>>(emptyList()) }
     var error by remember { mutableStateOf<String?>(null) }
 
+    var lovelaceJson by remember { mutableStateOf<JSONObject?>(null) }
+
     LaunchedEffect(Unit) {
         DashboardRepository.loadDashboards(
-            onSuccess = { dashboards ->
+            onSuccess = { dashboards, fullJson ->
                 dashboardPanels = dashboards
+                lovelaceJson = fullJson
             },
             onError = { message ->
                 error = message
@@ -49,6 +52,7 @@ fun DashboardEntryPoint() {
         AppScreen.DashboardView -> selectedDashboard?.let {
             DashboardViewScreen(
                 dashboard = it,
+                lovelaceJson = lovelaceJson ?: JSONObject(),
                 onBack = { currentScreen = AppScreen.DashboardList }
             )
         }

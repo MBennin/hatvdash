@@ -7,7 +7,7 @@ import org.json.JSONObject
 object DashboardRepository {
 
     fun loadDashboards(
-        onSuccess: (List<DashboardPanel>) -> Unit,
+        onSuccess: (List<DashboardPanel>, JSONObject) -> Unit,
         onError: (String) -> Unit
     ) {
         HaWebSocketManager.requestLovelaceJson { config ->
@@ -21,7 +21,7 @@ object DashboardRepository {
                         icon = view.optString("icon", "mdi:view-dashboard")
                     )
                 }
-                onSuccess(dashboards)
+                onSuccess(dashboards, config)
             } catch (e: Exception) {
                 onError("Failed to parse Lovelace JSON: ${e.message}")
             }

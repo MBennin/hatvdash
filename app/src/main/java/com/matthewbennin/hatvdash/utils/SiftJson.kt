@@ -1,54 +1,31 @@
-package com.matthewbennin.hatvdash.util
+package com.matthewbennin.hatvdash.utils
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import com.matthewbennin.hatvdash.model.DashboardPanel
 import com.matthewbennin.hatvdash.renderers.SectionsRenderer
-// import other renderers as needed
 import org.json.JSONObject
 
 object SiftJson {
-    @Composable
-    fun ExtractViewFromPath(lovelaceJson: JSONObject, path: String) {
-        val views = lovelaceJson.optJSONArray("views") ?: return
+    fun extractViewJson(lovelaceJson: JSONObject, path: String): JSONObject? {
+        val views = lovelaceJson.optJSONArray("views") ?: return null
 
         for (i in 0 until views.length()) {
             val view = views.getJSONObject(i)
             if (view.optString("path") == path) {
-                when (view.optString("type")) {
-                    "sections" -> SectionsRenderer.RenderSections(view)
-                    "masonry" -> {/* TODO MasonryRenderer.RenderMasonry(view) */}
-                    "sidebar" -> {/* TODO SidebarRenderer.RenderSidebar(view) */}
-                    "panel" -> {/* TODO PanelRenderer.RenderPanel(view) */}
-                    else -> {}
-                }
-                return
+                return view
             }
         }
+        return null
     }
 
-//    fun ExtractDashboardsFromJson(lovelaceJson: JSONObject) {
-//        val views = lovelaceJson.optJSONArray("views") ?: return
-//
-//        var dashboardPanels by remember { mutableStateOf<List<DashboardPanel>>(emptyList()) }
-//
-//        val dashboards = mutableListOf<DashboardPanel>()
-//
-//        for (i in 0 until views.length()) {
-//            val view = views.getJSONObject(i)
-//            dashboards.add(
-//                DashboardPanel(
-//                    title = view.optString("title", "Unnamed"),
-//                    urlPath = view.optString("path", ""),
-//                    icon = view.optString("icon", "mdi:view-dashboard")
-//                )
-//            )
-//        }
-//
-//        dashboardPanels = dashboards.toList()
-//
-//    }
+    @Composable
+    fun RenderView(viewJson: JSONObject) {
+        when (viewJson.optString("type")) {
+            "sections" -> SectionsRenderer.RenderSections(viewJson)
+            "masonry" -> {/* TODO: MasonryRenderer.RenderMasonry(viewJson) */}
+            "sidebar" -> {/* TODO: SidebarRenderer.RenderSidebar(viewJson) */}
+            "panel" -> {/* TODO: PanelRenderer.RenderPanel(viewJson) */}
+            else -> Text("Unsupported view type: ${viewJson.optString("type")}")
+        }
+    }
 }
