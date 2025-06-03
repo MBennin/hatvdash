@@ -18,16 +18,6 @@ fun DashboardViewScreen(
     onBack: () -> Unit
 ) {
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(dashboard.title) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
     ) { padding ->
         val viewJson = SiftJson.extractViewJson(lovelaceJson, dashboard.urlPath)
         if (viewJson != null) {

@@ -1,6 +1,7 @@
 package com.matthewbennin.hatvdash.renderers
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -17,14 +18,15 @@ object SectionsRenderer {
     fun RenderSections(viewJson: JSONObject) {
         val sections = viewJson.optJSONArray("sections") ?: JSONArray()
 
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            userScrollEnabled = false // prevent user scroll if everything fits
         ) {
-            (0 until sections.length()).forEach { index ->
-                val section = sections.optJSONObject(index) ?: return@forEach
+            items(sections.length()) { i ->
+                val section = sections.getJSONObject(i)
                 RenderGridSection(section)
             }
         }
@@ -42,7 +44,7 @@ object SectionsRenderer {
             contentPadding = PaddingValues(4.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().heightIn(max = 600.dp)
         ) {
             items(cardList) { cardJson ->
                 CardRouter.RenderCard(cardJson)
