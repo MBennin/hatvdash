@@ -1,7 +1,6 @@
 package com.matthewbennin.hatvdash.renderers
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -18,14 +17,13 @@ object SectionsRenderer {
     fun RenderSections(viewJson: JSONObject) {
         val sections = viewJson.optJSONArray("sections") ?: JSONArray()
 
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            userScrollEnabled = false // prevent user scroll if everything fits
+                .padding(horizontal = 4.dp, vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            items(sections.length()) { i ->
+            for (i in 0 until sections.length()) {
                 val section = sections.getJSONObject(i)
                 RenderGridSection(section)
             }
@@ -41,10 +39,10 @@ object SectionsRenderer {
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(columnSpan),
-            contentPadding = PaddingValues(4.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth().heightIn(max = 600.dp)
+            contentPadding = PaddingValues(2.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
             items(cardList) { cardJson ->
                 CardRouter.RenderCard(cardJson)

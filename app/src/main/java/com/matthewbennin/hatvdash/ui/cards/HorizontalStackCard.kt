@@ -14,12 +14,18 @@ fun HorizontalStackCard(cardJson: JSONObject) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 2.dp, vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         for (i in 0 until cards.length()) {
             val childCard = cards.getJSONObject(i)
-            CardRouter.RenderCard(childCard)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            ) {
+                CardRouter.RenderCard(childCard)
+            }
         }
     }
 }

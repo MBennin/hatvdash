@@ -33,16 +33,17 @@ fun ButtonCard(
     val tintColor = MaterialTheme.colorScheme.primary.toArgb()
     var iconBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
-
     LaunchedEffect(mdiIcon) {
         MdiIconManager.loadOrFetchIcon(context, mdiIcon, tintColor) {
             iconBitmap = it
         }
     }
 
-    Card(
+    Surface(
         modifier = modifier
-            .padding(8.dp)
+            .padding(4.dp)
+            .widthIn(min = 80.dp)
+            .heightIn(min = 80.dp)
             .focusable()
             .pointerInput(Unit) {
                 detectTapGestures(
@@ -51,14 +52,15 @@ fun ButtonCard(
                     onLongPress = { onAction(longAction) }
                 )
             },
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
     ) {
         Column(
             modifier = Modifier
-                .padding(16.dp)
-                .widthIn(min = 100.dp)
-                .heightIn(min = 100.dp),
+                .padding(8.dp)
+                .fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -66,15 +68,15 @@ fun ButtonCard(
                 Image(
                     bitmap = it.asImageBitmap(),
                     contentDescription = name,
-                    modifier = Modifier.size(64.dp)
+                    modifier = Modifier.size(48.dp)
                 )
-            } ?: CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            } ?: Spacer(modifier = Modifier.size(48.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
                 text = name,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1
             )
         }
