@@ -10,19 +10,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
 import com.matthewbennin.hatvdash.MdiIconManager
+import com.matthewbennin.hatvdash.data.EntityStateManager
 import org.json.JSONObject
 
 @Composable
 fun EntityCard(cardJson: JSONObject) {
     val context = LocalContext.current
-    val name = cardJson.optString("name", "Entity")
-    val state = "Normal" // TODO: Hook into EntityStateManager or WebSocket state
-    val icon = cardJson.optString("icon", "mdi:alert-circle-outline")
+
+    val entityId = cardJson.optString("entity", null)
+
+    // Track entity for state/icon fallback
+    if (!entityId.isNullOrBlank()) {
+        EntityStateManager.trackEntity(entityId)
+    }
+
+    val stateJson = entityId?.let { EntityStateManager.stateMap[it] }
+    val attributes = stateJson?.optJSONObject("attributes")
+
+    val fallbackName = attributes?.optString("friendly_name")
+    val fallbackIcon = attributes?.optString("icon")
+    val rawIcon = cardJson.optString("icon")
+    val name = cardJson.optString("name").ifBlank { fallbackName ?: "Entity" }
+    val icon = if (!rawIcon.isNullOrBlank()) rawIcon else fallbackIcon ?: "mdi:alert-circle-outline"
+    val state = stateJson?.optString("state") ?: "..."
 
     var iconBitmap by remember { mutableStateOf<Bitmap?>(null) }
     val tintColor = MaterialTheme.colorScheme.primary.toArgb()

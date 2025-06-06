@@ -16,6 +16,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.matthewbennin.hatvdash.MdiIconManager
+import com.matthewbennin.hatvdash.data.EntityStateManager
 import org.json.JSONObject
 
 @Composable
@@ -85,9 +86,23 @@ fun ButtonCard(
 
 @Composable
 fun ButtonCard(cardJson: JSONObject) {
-    val name = cardJson.optString("name", "Unnamed")
-    val icon = cardJson.optString("icon", "mdi:alert-circle-outline")
     val entityId = cardJson.optString("entity", null)
+
+    if (!entityId.isNullOrBlank()) {
+        EntityStateManager.trackEntity(entityId, needsIcon = cardJson.optString("icon").isNullOrBlank())
+    }
+
+    val fallbackName = EntityStateManager.getFriendlyNameForEntity(entityId ?: "")
+    val name = cardJson.optString("name").ifBlank { fallbackName ?: "Unnamed" }
+
+    val rawIcon = cardJson.optString("icon")
+    val fallbackIcon = EntityStateManager.getIconForEntity(entityId ?: "")
+    val icon = when {
+        !rawIcon.isNullOrBlank() -> rawIcon
+        !fallbackIcon.isNullOrBlank() -> fallbackIcon
+        else -> "mdi:alert-circle-outline"
+    }
+
     val tapAction = cardJson.optJSONObject("tap_action")
     val longAction = cardJson.optJSONObject("hold_action") ?: cardJson.optJSONObject("long_action")
     val doubleAction = cardJson.optJSONObject("double_action")
@@ -100,7 +115,6 @@ fun ButtonCard(cardJson: JSONObject) {
         longAction = longAction,
         doubleAction = doubleAction,
         onAction = { actionJson ->
-            // TODO: Hook into real Home Assistant command dispatcher
             println("Executing action: ${actionJson?.toString()}")
         }
     )

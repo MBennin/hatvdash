@@ -1,6 +1,8 @@
 package com.matthewbennin.hatvdash
 
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.matthewbennin.hatvdash.network.HaWebSocketManager

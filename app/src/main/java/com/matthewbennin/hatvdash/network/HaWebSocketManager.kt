@@ -1,7 +1,9 @@
 package com.matthewbennin.hatvdash.network
 
 import android.util.Log
+import com.matthewbennin.hatvdash.data.EntityStateManager
 import okhttp3.*
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 
@@ -44,6 +46,8 @@ object HaWebSocketManager {
                         pendingMessages.forEach { this@HaWebSocketManager.webSocket?.send(it) }
                         pendingMessages.clear()
                         isAuthenticated = true
+
+                        //subscribeToStateChanges() // ✅ start watching for state updates
                     }
                     "result" -> {
                         Log.d(TAG, "Received result for request ${msg.optInt("id")}")
@@ -59,7 +63,18 @@ object HaWebSocketManager {
                             val newState = event.optJSONObject("data")?.optJSONObject("new_state") ?: return
                             val entityId = newState.optString("entity_id") ?: return
 
-                            //EntityStateManager.updateEntityState(entityId, newState) TODO: Add this
+                            // Update only if forecast is now present
+                            if (entityId.startsWith("weather.") &&
+                                newState.optJSONObject("attributes")?.has("forecast") == true) {
+
+                                EntityStateManager.updateEntityState(entityId, newState)
+
+                                val forecast = newState
+                                    .optJSONObject("attributes")
+                                    ?.optJSONArray("forecast")
+
+                                Log.d("ForecastWatcher", "Received ${forecast?.length() ?: 0} forecast items for $entityId")
+                            }
                         }
                     }
                     else -> {
@@ -108,4 +123,82 @@ object HaWebSocketManager {
             .put("type", "lovelace/config")
         sendMessage(request)
     }
+
+    fun requestAllStates(callback: (JSONArray) -> Unit) {
+        val id = messageIdCounter++
+        callbacks[id] = { response ->
+            val result = response.optJSONArray("result")
+            if (result != null) {
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    callback(result)
+                }
+            } else {
+                Log.e(TAG, "get_states result missing or malformed: $response")
+            }
+        }
+
+        val request = JSONObject()
+            .put("id", id)
+            .put("type", "get_states")
+        sendMessage(request)
+    }
+
+    fun requestWeatherForecastDebug(entityId: String) {
+        val id = messageIdCounter++
+        callbacks[id] = { response ->
+            Log.d("WeatherForecastDebug", "Full forecast response:\n${response.toString(2)}")
+        }
+
+        val request = JSONObject()
+            .put("id", id)
+            .put("type", "weather/get_forecast")
+            .put("entity_id", entityId)
+            .put("forecast_type", "daily")
+
+        sendMessage(request)
+    }
+
+    fun subscribeToStateChanges() {
+        val id = messageIdCounter++
+        val request = JSONObject()
+            .put("id", id)
+            .put("type", "subscribe_events")
+            .put("event_type", "state_changed")
+        sendMessage(request)
+        Log.d(TAG, "Subscribed to state_changed events (id=$id)")
+    }
+
+    fun getForecast(entityId: String, type: String = "daily", callback: (JSONArray) -> Unit) {
+        val id = messageIdCounter++
+
+        callbacks[id] = { response ->
+            val result = response.optJSONObject("result")
+            val forecasts = result
+                ?.optJSONObject("response")
+                ?.optJSONObject(entityId)
+                ?.optJSONArray("forecast")
+
+            if (forecasts != null) {
+                callback(forecasts)
+            } else {
+                Log.e(TAG, "No forecast returned for $entityId")
+            }
+        }
+
+        val request = JSONObject()
+            .put("id", id)
+            .put("type", "call_service")
+            .put("domain", "weather")
+            .put("service", "get_forecasts")
+            .put("target", JSONObject().put("entity_id", entityId))
+            .put("service_data", JSONObject().put("type", type))
+            .put("return_response", true)
+
+        sendMessage(request)
+        Log.d(TAG, "Requested $type forecast for $entityId (id=$id)")
+    }
+
+
+
+
 }

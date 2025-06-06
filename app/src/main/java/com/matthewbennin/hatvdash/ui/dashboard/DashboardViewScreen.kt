@@ -1,11 +1,12 @@
-package com.matthewbennin.hatvdash.ui.dashboardscreen
+package com.matthewbennin.hatvdash.ui.dashboard
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import com.matthewbennin.hatvdash.data.EntityStateManager
 import com.matthewbennin.hatvdash.model.DashboardPanel
 import com.matthewbennin.hatvdash.utils.SiftJson
 import org.json.JSONObject
@@ -17,8 +18,12 @@ fun DashboardViewScreen(
     lovelaceJson: JSONObject,
     onBack: () -> Unit
 ) {
-    Scaffold(
-    ) { padding ->
+    // 🧼 Prune unused states when this screen is entered
+    LaunchedEffect(Unit) {
+        EntityStateManager.pruneUntrackedStates()
+    }
+
+    Scaffold { padding ->
         val viewJson = SiftJson.extractViewJson(lovelaceJson, dashboard.urlPath)
         if (viewJson != null) {
             Surface(modifier = Modifier.padding(padding)) {

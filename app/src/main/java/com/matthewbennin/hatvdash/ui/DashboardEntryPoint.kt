@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.matthewbennin.hatvdash.model.DashboardPanel
 import com.matthewbennin.hatvdash.ui.launchscreen.DashboardListScreen
 import com.matthewbennin.hatvdash.data.DashboardRepository
+import com.matthewbennin.hatvdash.data.EntityStateManager
 import com.matthewbennin.hatvdash.navigation.AppScreen
-import com.matthewbennin.hatvdash.ui.dashboardscreen.DashboardViewScreen
+import com.matthewbennin.hatvdash.ui.dashboard.DashboardViewScreen
 import com.matthewbennin.hatvdash.ui.settings.SettingsScreen
 import org.json.JSONObject
 
@@ -30,11 +32,16 @@ fun DashboardEntryPoint() {
             onSuccess = { dashboards, fullJson ->
                 dashboardPanels = dashboards
                 lovelaceJson = fullJson
+
+                // Trigger state request after Lovelace JSON is loaded and parsing begins
+                EntityStateManager.getInitialStates()
+
             },
             onError = { message ->
                 error = message
             }
         )
+
     }
 
     when (currentScreen) {
