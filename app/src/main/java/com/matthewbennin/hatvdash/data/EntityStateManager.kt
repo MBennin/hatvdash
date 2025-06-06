@@ -98,4 +98,8 @@ object EntityStateManager {
     fun getForecast(entityId: String): JSONArray? {
         return weatherForecasts[entityId]
     }
+
+    fun getState(entityId: String): JSONObject? {
+        return entityStates[entityId]
+    }
 }

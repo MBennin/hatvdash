@@ -1,21 +1,30 @@
 package com.matthewbennin.hatvdash.ui.cards
 
 import android.graphics.Bitmap
+import android.view.KeyEvent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.matthewbennin.hatvdash.MdiIconManager
 import com.matthewbennin.hatvdash.data.EntityStateManager
+import com.matthewbennin.hatvdash.logic.RemotePressHandler
+import com.matthewbennin.hatvdash.logic.handleInteraction
 import org.json.JSONObject
 
 @Composable
@@ -42,6 +51,12 @@ fun EntityCard(cardJson: JSONObject) {
     var iconBitmap by remember { mutableStateOf<Bitmap?>(null) }
     val tintColor = MaterialTheme.colorScheme.primary.toArgb()
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val focusRequester = remember { FocusRequester() }
+
+    val moreInfoAction = JSONObject().put("action", "more-info").put("entity", entityId)
+
     LaunchedEffect(icon) {
         MdiIconManager.loadOrFetchIcon(context, icon, tintColor) {
             iconBitmap = it
@@ -51,10 +66,30 @@ fun EntityCard(cardJson: JSONObject) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(8.dp)
+            .focusRequester(focusRequester)
+            .focusable(interactionSource = interactionSource)
+            .onKeyEvent { event ->
+                val key = event.nativeKeyEvent
+                if (key.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || key.keyCode == KeyEvent.KEYCODE_ENTER) {
+                    RemotePressHandler.handleKeyEvent(
+                        event = key,
+                        onSingleTap = { handleInteraction(context, moreInfoAction, entityId) },
+                        onDoubleTap = { handleInteraction(context, moreInfoAction, entityId) },
+                        onLongPress = { handleInteraction(context, moreInfoAction, entityId) }
+                    )
+                    true
+                } else {
+                    false
+                }
+            },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isFocused)
+                MaterialTheme.colorScheme.surfaceVariant
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
+        ),
     ) {
         Column(
             modifier = Modifier
@@ -63,7 +98,8 @@ fun EntityCard(cardJson: JSONObject) {
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = name,

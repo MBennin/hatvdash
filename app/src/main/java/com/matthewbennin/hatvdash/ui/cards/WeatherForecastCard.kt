@@ -5,15 +5,23 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Picture
 import android.util.Log
+import android.view.KeyEvent
+import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,6 +43,10 @@ fun WeatherForecastCard(cardJson: JSONObject) {
     val context = LocalContext.current
     val tintColor = MaterialTheme.colorScheme.primary.toArgb()
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val focusRequester = remember { FocusRequester() }
+
     EntityStateManager.trackEntity(entityId)
 
     LaunchedEffect(entityId, forecastType) {
@@ -45,10 +57,25 @@ fun WeatherForecastCard(cardJson: JSONObject) {
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isFocused)
+                MaterialTheme.colorScheme.surfaceVariant
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f),
+        ),
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
+            .focusRequester(focusRequester)
+            .focusable(interactionSource = interactionSource)
+            .onKeyEvent {
+                if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
+                    it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER
+                ) {
+                    Toast.makeText(context, "Forecast for ${entityId.substringAfter(".")}", Toast.LENGTH_SHORT).show()
+                    true
+                } else false
+            }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
@@ -162,7 +189,7 @@ private fun loadWeatherIcon(
         "$condition.svg"
     } else {
         Log.w("WeatherIcon", "Missing icon for condition: $condition, using fallback")
-        "cloudy.svg" // fallback
+        "cloudy.svg"
     }
 
     try {
@@ -191,5 +218,3 @@ private fun fileExists(context: Context, path: String): Boolean {
         false
     }
 }
-
-
