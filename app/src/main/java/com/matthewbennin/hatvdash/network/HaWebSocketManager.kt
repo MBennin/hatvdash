@@ -55,7 +55,6 @@ object HaWebSocketManager {
                         callbacks.remove(id)?.invoke(msg)
                     }
                     "event" -> {
-                        Log.d(TAG, "Received event for request ${msg.optInt("id")}")
 
                         val event = msg.optJSONObject("event") ?: return
 
@@ -63,18 +62,22 @@ object HaWebSocketManager {
                             val newState = event.optJSONObject("data")?.optJSONObject("new_state") ?: return
                             val entityId = newState.optString("entity_id") ?: return
 
-                            // Update only if forecast is now present
-                            if (entityId.startsWith("weather.") &&
-                                newState.optJSONObject("attributes")?.has("forecast") == true) {
+                            EntityStateManager.updateEntityState(entityId, newState)
 
-                                EntityStateManager.updateEntityState(entityId, newState)
 
-                                val forecast = newState
-                                    .optJSONObject("attributes")
-                                    ?.optJSONArray("forecast")
 
-                                Log.d("ForecastWatcher", "Received ${forecast?.length() ?: 0} forecast items for $entityId")
-                            }
+//                            // Update only if forecast is now present
+//                            if (entityId.startsWith("weather.") &&
+//                                newState.optJSONObject("attributes")?.has("forecast") == true) {
+//
+//                                EntityStateManager.updateEntityState(entityId, newState)
+//
+//                                val forecast = newState
+//                                    .optJSONObject("attributes")
+//                                    ?.optJSONArray("forecast")
+//
+//                                Log.d("ForecastWatcher", "Received ${forecast?.length() ?: 0} forecast items for $entityId")
+                            //}
                         }
                     }
                     else -> {
@@ -197,6 +200,27 @@ object HaWebSocketManager {
         sendMessage(request)
         Log.d(TAG, "Requested $type forecast for $entityId (id=$id)")
     }
+
+    fun callService(
+        domain: String,
+        service: String,
+        entityId: String,
+        data: JSONObject? = null
+    ) {
+        val id = messageIdCounter++
+        val message = JSONObject().apply {
+            put("id", id)
+            put("type", "call_service")
+            put("domain", domain)
+            put("service", service)
+            put("target", JSONObject().put("entity_id", entityId))
+            if (data != null) {
+                put("service_data", data)
+            }
+        }
+        sendMessage(message)
+    }
+
 
 
 

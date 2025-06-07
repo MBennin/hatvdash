@@ -12,4 +12,8 @@ object PopupStateManager {
     fun dismiss() {
         moreInfoEntityId.value = null
     }
+
+    fun isOpenFor(entityId: String): Boolean {
+        return moreInfoEntityId.value == entityId
+    }
 }

@@ -3,6 +3,10 @@ package com.matthewbennin.hatvdash.ui
 import androidx.compose.runtime.Composable
 import com.matthewbennin.hatvdash.ui.infoCards.InputSelectInfo
 import com.matthewbennin.hatvdash.data.EntityStateManager
+import com.matthewbennin.hatvdash.ui.infoCards.InputBooleanInfo
+import com.matthewbennin.hatvdash.ui.infoCards.InputButtonInfo
+import com.matthewbennin.hatvdash.ui.infoCards.InputNumberInfo
+import com.matthewbennin.hatvdash.ui.infoCards.LightInfo
 
 // import other infoCards as you add them, e.g.:
 // import com.mattbennin.hatvdash.ui.infoCards.LightInfo
@@ -13,7 +17,10 @@ fun MoreInfoPopup(entityId: String, onDismiss: () -> Unit) {
 
     when (domain) {
         "input_select" -> InputSelectInfo(entityId, onDismiss)
-        // "light" -> LightInfo(entityId, onDismiss)
+        "input_number" -> InputNumberInfo(entityId, onDismiss)
+        "input_boolean" -> InputBooleanInfo(entityId, onDismiss)
+        "input_button" -> InputButtonInfo(entityId, onDismiss)
+         "light" -> LightInfo(entityId, onDismiss)
         // "sensor" -> SensorInfo(entityId, onDismiss)
         else -> FallbackInfo(entityId, onDismiss)
     }

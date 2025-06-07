@@ -1,6 +1,8 @@
 package com.matthewbennin.hatvdash.ui.cards
 
 import android.graphics.Bitmap
+import android.os.Handler
+import android.os.Looper
 import android.view.KeyEvent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.focusable
@@ -30,17 +32,18 @@ import org.json.JSONObject
 @Composable
 fun EntityCard(cardJson: JSONObject) {
     val context = LocalContext.current
-
     val entityId = cardJson.optString("entity", null)
 
-    // Track entity for state/icon fallback
     if (!entityId.isNullOrBlank()) {
         EntityStateManager.trackEntity(entityId)
     }
 
-    val stateJson = entityId?.let { EntityStateManager.stateMap[it] }
-    val attributes = stateJson?.optJSONObject("attributes")
+    // Observe just this entity’s state
+    val stateJson by remember {
+        derivedStateOf { EntityStateManager.entityStates[entityId] }
+    }
 
+    val attributes = stateJson?.optJSONObject("attributes")
     val fallbackName = attributes?.optString("friendly_name")
     val fallbackIcon = attributes?.optString("icon")
     val rawIcon = cardJson.optString("icon")
@@ -55,13 +58,20 @@ fun EntityCard(cardJson: JSONObject) {
     val isFocused by interactionSource.collectIsFocusedAsState()
     val focusRequester = remember { FocusRequester() }
 
-    val moreInfoAction = JSONObject().put("action", "more-info").put("entity", entityId)
-
     LaunchedEffect(icon) {
         MdiIconManager.loadOrFetchIcon(context, icon, tintColor) {
             iconBitmap = it
         }
     }
+
+    // --- Interaction Defaults ---
+    fun getActionOrDefault(key: String): JSONObject? {
+        return cardJson.optJSONObject(key) ?: JSONObject().put("action", "more-info").put("entity", entityId)
+    }
+
+    val tapAction = getActionOrDefault("tap_action")
+    val doubleTapAction = cardJson.optJSONObject("double_tap_action") ?: tapAction
+    val holdAction = getActionOrDefault("hold_action")
 
     Card(
         modifier = Modifier
@@ -74,9 +84,12 @@ fun EntityCard(cardJson: JSONObject) {
                 if (key.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || key.keyCode == KeyEvent.KEYCODE_ENTER) {
                     RemotePressHandler.handleKeyEvent(
                         event = key,
-                        onSingleTap = { handleInteraction(context, moreInfoAction, entityId) },
-                        onDoubleTap = { handleInteraction(context, moreInfoAction, entityId) },
-                        onLongPress = { handleInteraction(context, moreInfoAction, entityId) }
+                        onSingleTap = { handleInteraction(context, tapAction, entityId) },
+                        onDoubleTap = { handleInteraction(context, doubleTapAction, entityId) },
+                        onLongPress = { /* intentionally empty */ },
+                        onPostLongPressRelease = {
+                            handleInteraction(context, holdAction, entityId)
+                        }
                     )
                     true
                 } else {

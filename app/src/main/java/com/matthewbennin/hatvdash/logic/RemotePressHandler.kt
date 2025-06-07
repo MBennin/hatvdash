@@ -26,7 +26,8 @@ object RemotePressHandler {
         event: KeyEvent,
         onSingleTap: () -> Unit,
         onDoubleTap: () -> Unit,
-        onLongPress: () -> Unit
+        onLongPress: () -> Unit,
+        onPostLongPressRelease: (() -> Unit)? = null
     ): Boolean {
         val now = System.currentTimeMillis()
 
@@ -45,9 +46,10 @@ object RemotePressHandler {
                 longPressRunnable = Runnable {
                     if (isHandlingPress) {
                         longPressFired = true
-                        Log.d(TAG, "Long press triggered")
+                        Log.d(TAG, "Long press triggered (pre-action)")
                         cancelPendingSingleTap()
                         onLongPress()
+                        Log.d(TAG, "Long press triggered (post-action)")
                     }
                 }
                 handler.postDelayed(longPressRunnable!!, LONG_PRESS_TIMEOUT)
@@ -66,7 +68,8 @@ object RemotePressHandler {
                 val pressDuration = now - pressStartTime
 
                 if (longPressFired) {
-                    Log.d(TAG, "Skipping ACTION_UP — long press already fired")
+                    Log.d(TAG, "Post long press ACTION_UP — triggering post-release callback")
+                    onPostLongPressRelease?.invoke()
                     return true
                 }
 

@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
 import com.matthewbennin.hatvdash.data.EntityStateManager
 import com.matthewbennin.hatvdash.model.DashboardPanel
+import com.matthewbennin.hatvdash.network.HaWebSocketManager
 import com.matthewbennin.hatvdash.ui.MoreInfoPopup
 import com.matthewbennin.hatvdash.ui.PopupStateManager
 import com.matthewbennin.hatvdash.utils.SiftJson
@@ -35,6 +36,7 @@ fun DashboardViewScreen(
     // 🧼 Prune unused states when this screen is entered
     LaunchedEffect(Unit) {
         EntityStateManager.pruneUntrackedStates()
+        HaWebSocketManager.subscribeToStateChanges()
     }
 
     Scaffold { padding ->

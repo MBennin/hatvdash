@@ -6,13 +6,17 @@ import android.widget.Toast
 import com.matthewbennin.hatvdash.ui.PopupStateManager
 import org.json.JSONObject
 
-fun handleInteraction(context: Context, action: JSONObject?, entityId: String?, onMoreInfo: ((entityId: String) -> Unit)? = null) {
+fun handleInteraction(
+    context: Context,
+    action: JSONObject?,
+    entityId: String?,
+    onMoreInfo: ((entityId: String) -> Unit)? = null
+) {
     Log.d("handleInteraction", "action: $action")
     val type = action?.optString("action") ?: "none"
 
     when (type) {
         "toggle" -> {
-            // Send toggle service via HaWebSocketManager
             Toast.makeText(context, "Toggle $entityId", Toast.LENGTH_SHORT).show()
         }
 
@@ -27,7 +31,12 @@ fun handleInteraction(context: Context, action: JSONObject?, entityId: String?, 
         }
 
         "more-info" -> {
-            PopupStateManager.show(entityId ?: "")
+            val id = entityId ?: return
+            if (!PopupStateManager.isOpenFor(id)) {
+                PopupStateManager.show(id)
+            } else {
+                Log.d("handleInteraction", "Popup for $id is already open, skipping.")
+            }
         }
 
         "call-service", "perform-action", "assist" -> {

@@ -9,12 +9,16 @@ import org.json.JSONObject
 object EntityStateManager {
     private val trackedEntities = mutableSetOf<String>()
     private val entitiesRequiringIcons = mutableSetOf<String>()
-    private val entityStates = mutableStateMapOf<String, JSONObject>()
+    // Internal mutable map
+    private val _entityStates = mutableStateMapOf<String, JSONObject>()
+
+    // Public read-only access for Compose
+    val entityStates: Map<String, JSONObject> get() = _entityStates
 
     private val weatherForecasts = mutableStateMapOf<String, JSONArray>()
 
     /** Public read-only view for observing in Compose */
-    val stateMap: Map<String, JSONObject> get() = entityStates
+    val stateMap: Map<String, JSONObject> get() = _entityStates
 
     fun trackEntity(entityId: String, needsIcon: Boolean = false) {
         trackedEntities.add(entityId)
@@ -24,7 +28,7 @@ object EntityStateManager {
     fun clear() {
         trackedEntities.clear()
         entitiesRequiringIcons.clear()
-        entityStates.clear()
+        _entityStates.clear()
     }
 
     fun loadFilteredStates(json: JSONArray) {
@@ -32,38 +36,38 @@ object EntityStateManager {
             val entity = json.getJSONObject(i)
             val id = entity.optString("entity_id")
             if (id in trackedEntities) {
-                entityStates[id] = entity
+                _entityStates[id] = entity
                 Log.d("EntityStateManager", "Stored state for $id")
             }
         }
-        Log.d("EntityStateManager", "Final state map size: ${entityStates.size}")
+        Log.d("EntityStateManager", "Final state map size: ${_entityStates.size}")
     }
 
     fun updateEntityState(entityId: String, newState: JSONObject) {
         if (entityId in trackedEntities) {
-            entityStates[entityId] = newState
+            _entityStates[entityId] = newState
             Log.d("EntityStateManager", "Updated state for $entityId: ${newState.optString("state")}")
         }
     }
 
     fun getIconForEntity(entityId: String?): String? {
         return if (entityId in entitiesRequiringIcons) {
-            entityStates[entityId]?.optJSONObject("attributes")?.optString("icon")
+            _entityStates[entityId]?.optJSONObject("attributes")?.optString("icon")
         } else null
     }
 
     fun getFriendlyNameForEntity(entityId: String?): String? {
-        return entityStates[entityId]?.optJSONObject("attributes")?.optString("friendly_name")
+        return _entityStates[entityId]?.optJSONObject("attributes")?.optString("friendly_name")
     }
 
     fun getTrackedEntities(): Set<String> = trackedEntities.toSet()
 
     fun pruneUntrackedStates() {
-        val keysToRemove = entityStates.keys.filter { it !in trackedEntities }
-        keysToRemove.forEach { entityStates.remove(it) }
+        val keysToRemove = _entityStates.keys.filter { it !in trackedEntities }
+        keysToRemove.forEach { _entityStates.remove(it) }
         Log.d("EntityStateManager", "Pruned ${keysToRemove.size} untracked entities")
 
-        Log.d("EntityStateManager", "${entityStates.size} tracked")
+        Log.d("EntityStateManager", "${_entityStates.size} tracked")
 
         Log.d("EntityStateManager", "$trackedEntities")
     }
@@ -78,9 +82,9 @@ object EntityStateManager {
         for (i in 0 until json.length()) {
             val entity = json.getJSONObject(i)
             val id = entity.optString("entity_id")
-            entityStates[id] = entity
+            _entityStates[id] = entity
         }
-        Log.d("EntityStateManager", "Preloaded ALL entity states: ${entityStates.size}")
+        Log.d("EntityStateManager", "Preloaded ALL entity states: ${_entityStates.size}")
     }
 
     fun requestForecastForEntity(entityId: String, type: String = "daily") {
@@ -100,6 +104,6 @@ object EntityStateManager {
     }
 
     fun getState(entityId: String): JSONObject? {
-        return entityStates[entityId]
+        return _entityStates[entityId]
     }
 }

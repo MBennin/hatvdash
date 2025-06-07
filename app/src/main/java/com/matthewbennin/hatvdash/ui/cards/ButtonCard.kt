@@ -1,6 +1,8 @@
 package com.matthewbennin.hatvdash.ui.cards
 
 import android.graphics.Bitmap
+import android.os.Handler
+import android.os.Looper
 import android.view.KeyEvent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.focusable
@@ -14,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.onKeyEvent
@@ -36,15 +39,49 @@ fun ButtonCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val tintColor = MaterialTheme.colorScheme.primary.toArgb()
-    var iconBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(mdiIcon) {
-        MdiIconManager.loadOrFetchIcon(context, mdiIcon, tintColor) {
+    val stateJson by remember { derivedStateOf { EntityStateManager.entityStates[entityId] } }
+
+    val state = stateJson?.optString("state") ?: "unknown"
+    val attributes = stateJson?.optJSONObject("attributes")
+    val domain = entityId?.substringBefore(".") ?: ""
+
+    val defaultPrimaryColor = MaterialTheme.colorScheme.primary
+
+    val iconColor = remember(state, attributes) {
+        when {
+            state == "unavailable" || state == "unknown" || stateJson == null -> Color(0xFF6F6F6F)
+
+            domain == "light" && state == "on" -> {
+                val rgb = attributes?.optJSONArray("rgb_color")
+                if (rgb != null && rgb.length() == 3) {
+                    Color(
+                        red = rgb.getInt(0) / 255f,
+                        green = rgb.getInt(1) / 255f,
+                        blue = rgb.getInt(2) / 255f
+                    )
+                } else Color(0xFFFFC107)
+            }
+
+            domain == "input_boolean" -> {
+                if (state == "on" || state == "true") Color(0xFFFFC107)
+                else defaultPrimaryColor
+            }
+
+            state == "on" -> Color(0xFFFFC107)
+
+            else -> defaultPrimaryColor
+        }
+    }
+
+    var iconBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    LaunchedEffect(mdiIcon, iconColor) {
+        MdiIconManager.loadOrFetchIcon(context, mdiIcon, iconColor.toArgb()) {
             iconBitmap = it
         }
     }
@@ -63,7 +100,10 @@ fun ButtonCard(
                         event = key,
                         onSingleTap = { handleInteraction(context, tapAction, entityId) },
                         onDoubleTap = { handleInteraction(context, doubleAction, entityId) },
-                        onLongPress = { handleInteraction(context, longAction, entityId) }
+                        onLongPress = { /* intentionally empty */ },
+                        onPostLongPressRelease = {
+                            handleInteraction(context, longAction, entityId)
+                        }
                     )
                     true
                 } else false
@@ -121,16 +161,32 @@ fun ButtonCard(cardJson: JSONObject) {
         else -> "mdi:alert-circle-outline"
     }
 
-    val tapAction = cardJson.optJSONObject("tap_action")
-    val longAction = cardJson.optJSONObject("hold_action") ?: cardJson.optJSONObject("long_action")
-    val doubleAction = cardJson.optJSONObject("double_tap_action")
+    val domain = entityId?.substringBefore(".") ?: ""
+
+    val toggleableDomains = setOf("light", "input_boolean", "switch", "fan", "climate", "cover")
+
+    // Determine base actions from JSON
+    val jsonTap = cardJson.optJSONObject("tap_action")
+    val jsonHold = cardJson.optJSONObject("hold_action") ?: cardJson.optJSONObject("long_action")
+    val jsonDouble = cardJson.optJSONObject("double_tap_action")
+
+    // Generate default interactions
+    val defaultTap = when {
+        jsonTap != null -> jsonTap
+        toggleableDomains.contains(domain) -> JSONObject().put("action", "toggle").put("entity", entityId)
+        else -> JSONObject().put("action", "more-info").put("entity", entityId)
+    }
+
+    val finalTap = jsonTap ?: defaultTap
+    val finalHold = jsonHold ?: JSONObject().put("action", "more-info").put("entity", entityId)
+    val finalDouble = jsonDouble ?: JSONObject(finalTap.toString())
 
     ButtonCard(
         name = name,
         entityId = entityId,
         mdiIcon = icon,
-        tapAction = tapAction,
-        longAction = longAction,
-        doubleAction = doubleAction
+        tapAction = finalTap,
+        longAction = finalHold,
+        doubleAction = finalDouble
     )
 }

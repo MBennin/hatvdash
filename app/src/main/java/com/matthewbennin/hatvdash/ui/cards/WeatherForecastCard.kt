@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Picture
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
@@ -28,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.caverock.androidsvg.SVG
 import com.matthewbennin.hatvdash.data.EntityStateManager
+import com.matthewbennin.hatvdash.logic.RemotePressHandler
+import com.matthewbennin.hatvdash.logic.handleInteraction
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
@@ -55,6 +59,13 @@ fun WeatherForecastCard(cardJson: JSONObject) {
 
     val forecastArray = EntityStateManager.getForecast(entityId)
 
+    // --- Interaction Defaults ---
+    fun defaultAction(): JSONObject = JSONObject().put("action", "more-info").put("entity", entityId)
+
+    val tapAction = cardJson.optJSONObject("tap_action") ?: defaultAction()
+    val doubleTapAction = cardJson.optJSONObject("double_tap_action") ?: JSONObject(tapAction.toString())
+    val holdAction = cardJson.optJSONObject("hold_action") ?: cardJson.optJSONObject("long_action") ?: defaultAction()
+
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
@@ -68,17 +79,23 @@ fun WeatherForecastCard(cardJson: JSONObject) {
             .padding(8.dp)
             .focusRequester(focusRequester)
             .focusable(interactionSource = interactionSource)
-            .onKeyEvent {
-                if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
-                    it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER
-                ) {
-                    Toast.makeText(context, "Forecast for ${entityId.substringAfter(".")}", Toast.LENGTH_SHORT).show()
+            .onKeyEvent { event ->
+                val key = event.nativeKeyEvent
+                if (key.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || key.keyCode == KeyEvent.KEYCODE_ENTER) {
+                    RemotePressHandler.handleKeyEvent(
+                        event = key,
+                        onSingleTap = { handleInteraction(context, tapAction, entityId) },
+                        onDoubleTap = { handleInteraction(context, doubleTapAction, entityId) },
+                        onLongPress = { /* intentionally empty */ },
+                        onPostLongPressRelease = {
+                            handleInteraction(context, holdAction, entityId)
+                        }
+                    )
                     true
                 } else false
             }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-
             if (showCurrent && forecastArray != null && forecastArray.length() > 0) {
                 val current = forecastArray.getJSONObject(0)
                 val condition = current.optString("condition", "unknown")
@@ -179,6 +196,7 @@ fun WeatherForecastCard(cardJson: JSONObject) {
         }
     }
 }
+
 
 private fun loadWeatherIcon(
     context: Context,
