@@ -8,9 +8,6 @@ import com.matthewbennin.hatvdash.ui.infoCards.InputButtonInfo
 import com.matthewbennin.hatvdash.ui.infoCards.InputNumberInfo
 import com.matthewbennin.hatvdash.ui.infoCards.LightInfo
 
-// import other infoCards as you add them, e.g.:
-// import com.mattbennin.hatvdash.ui.infoCards.LightInfo
-
 @Composable
 fun MoreInfoPopup(entityId: String, onDismiss: () -> Unit) {
     val domain = entityId.substringBefore(".")

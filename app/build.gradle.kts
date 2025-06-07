@@ -43,7 +43,7 @@ android {
 
     packaging {
         resources {
-            excludes += "/src/main/res/xml/network_security_config.xml.template"
+            excludes += "/src/main/res/xml/network_security_config_template.xml"
         }
     }
 }
