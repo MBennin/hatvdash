@@ -76,6 +76,7 @@ fun LightInfo(entityId: String, onDismiss: () -> Unit) {
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
+            Spacer(Modifier.height(12.dp))
 
             Box(
                 modifier = Modifier
@@ -219,7 +220,6 @@ fun LightBrightnessControl(entityId: String) {
         delay(100)
         focusRequester.requestFocus()
     }
-
     Box(
         modifier = Modifier
             .focusRequester(focusRequester)
@@ -257,10 +257,10 @@ fun LightBrightnessControl(entityId: String) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "$sliderValue%",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onSurface
             )
+            Spacer(Modifier.height(24.dp))
             Box(
                 modifier = Modifier
                     .size(width = 100.dp, height = 200.dp)
@@ -315,6 +315,7 @@ fun LightColorTempControl(entityId: String) {
         delay(100)
         focusRequester.requestFocus()
     }
+
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
@@ -416,6 +417,7 @@ fun LightColorControl(entityId: String) {
         focusRequester.requestFocus()
     }
 
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = "Color",
@@ -472,7 +474,7 @@ fun LightColorControl(entityId: String) {
                             brush = Brush.verticalGradient(
                                 colors = List(13) { i ->
                                     Color.hsv((i * 30f) % 360f, 1f, 1f)
-                                }
+                                }.reversed()
                             )
                         ),
                     contentAlignment = Alignment.BottomCenter
@@ -557,7 +559,7 @@ fun LightEffectControl(entityId: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(24.dp))
 
         LazyColumn(
             state = listState,

@@ -4,33 +4,24 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Picture
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
-import android.view.KeyEvent
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.focusable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.matthewbennin.hatvdash.ui.rememberRemoteKeyInteractions
 import com.caverock.androidsvg.SVG
 import com.matthewbennin.hatvdash.data.EntityStateManager
-import com.matthewbennin.hatvdash.logic.RemotePressHandler
 import com.matthewbennin.hatvdash.logic.handleInteraction
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -47,10 +38,6 @@ fun WeatherForecastCard(cardJson: JSONObject) {
     val context = LocalContext.current
     val tintColor = MaterialTheme.colorScheme.primary.toArgb()
 
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    val focusRequester = remember { FocusRequester() }
-
     EntityStateManager.trackEntity(entityId)
 
     LaunchedEffect(entityId, forecastType) {
@@ -66,6 +53,14 @@ fun WeatherForecastCard(cardJson: JSONObject) {
     val doubleTapAction = cardJson.optJSONObject("double_tap_action") ?: JSONObject(tapAction.toString())
     val holdAction = cardJson.optJSONObject("hold_action") ?: cardJson.optJSONObject("long_action") ?: defaultAction()
 
+    val remote = rememberRemoteKeyInteractions(
+        onSingleTap = { handleInteraction(context, tapAction, entityId) },
+        onDoubleTap = { handleInteraction(context, doubleTapAction, entityId) },
+        onLongPress = {},
+        onPostLongPressRelease = { handleInteraction(context, holdAction, entityId) }
+    )
+    val isFocused by remote.isFocused
+
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
@@ -77,23 +72,7 @@ fun WeatherForecastCard(cardJson: JSONObject) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .focusRequester(focusRequester)
-            .focusable(interactionSource = interactionSource)
-            .onKeyEvent { event ->
-                val key = event.nativeKeyEvent
-                if (key.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || key.keyCode == KeyEvent.KEYCODE_ENTER) {
-                    RemotePressHandler.handleKeyEvent(
-                        event = key,
-                        onSingleTap = { handleInteraction(context, tapAction, entityId) },
-                        onDoubleTap = { handleInteraction(context, doubleTapAction, entityId) },
-                        onLongPress = { /* intentionally empty */ },
-                        onPostLongPressRelease = {
-                            handleInteraction(context, holdAction, entityId)
-                        }
-                    )
-                    true
-                } else false
-            }
+            .then(remote.modifier)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             if (showCurrent && forecastArray != null && forecastArray.length() > 0) {

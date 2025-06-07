@@ -1,31 +1,23 @@
 package com.matthewbennin.hatvdash.ui.cards
 
 import android.graphics.Bitmap
-import android.os.Handler
-import android.os.Looper
-import android.view.KeyEvent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.focusable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.matthewbennin.hatvdash.MdiIconManager
 import com.matthewbennin.hatvdash.data.EntityStateManager
 import com.matthewbennin.hatvdash.logic.RemotePressHandler
 import com.matthewbennin.hatvdash.logic.handleInteraction
+import com.matthewbennin.hatvdash.ui.rememberRemoteKeyInteractions
 import org.json.JSONObject
 
 @Composable
@@ -40,10 +32,13 @@ fun ButtonCard(
 ) {
     val context = LocalContext.current
 
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    val focusRequester = remember { FocusRequester() }
-
+    val remote = rememberRemoteKeyInteractions(
+        onSingleTap = { handleInteraction(context, tapAction, entityId) },
+        onDoubleTap = { handleInteraction(context, doubleAction, entityId) },
+        onLongPress = {},
+        onPostLongPressRelease = { handleInteraction(context, longAction, entityId) }
+    )
+    val isFocused by remote.isFocused
     val stateJson by remember { derivedStateOf { EntityStateManager.entityStates[entityId] } }
 
     val state = stateJson?.optString("state") ?: "unknown"
@@ -91,23 +86,7 @@ fun ButtonCard(
             .padding(4.dp)
             .widthIn(min = 80.dp)
             .heightIn(min = 80.dp)
-            .focusRequester(focusRequester)
-            .focusable(interactionSource = interactionSource)
-            .onKeyEvent { event ->
-                val key = event.nativeKeyEvent
-                if (key.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || key.keyCode == KeyEvent.KEYCODE_ENTER) {
-                    RemotePressHandler.handleKeyEvent(
-                        event = key,
-                        onSingleTap = { handleInteraction(context, tapAction, entityId) },
-                        onDoubleTap = { handleInteraction(context, doubleAction, entityId) },
-                        onLongPress = { /* intentionally empty */ },
-                        onPostLongPressRelease = {
-                            handleInteraction(context, longAction, entityId)
-                        }
-                    )
-                    true
-                } else false
-            },
+            .then(remote.modifier),
         shape = RoundedCornerShape(16.dp),
         color = if (isFocused)
             MaterialTheme.colorScheme.surfaceVariant
