@@ -25,6 +25,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import com.matthewbennin.hatvdash.MdiIconManager
+import com.matthewbennin.hatvdash.ui.rememberMdiIconBitmap
 
 @Composable
 fun DashboardCard(
@@ -34,19 +35,13 @@ fun DashboardCard(
     onClick: () -> Unit
 ) {
 
-    var iconBitmap by remember { mutableStateOf<Bitmap?>(null) }
-
     val context = LocalContext.current
 
     var isFocused by remember { mutableStateOf(false) }
 
     val tintColor = MaterialTheme.colorScheme.primary.toArgb()
 
-    LaunchedEffect(mdiIcon) {
-        MdiIconManager.loadOrFetchIcon(context, mdiIcon, tintColor) { bitmap ->
-            iconBitmap = bitmap
-        }
-    }
+    val iconBitmap by rememberMdiIconBitmap(mdiIcon, tintColor)
 
     Surface(
         shape = RoundedCornerShape(16.dp),

@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.matthewbennin.hatvdash.data.EntityStateManager
 import com.matthewbennin.hatvdash.network.HaWebSocketManager
 import com.matthewbennin.hatvdash.MdiIconManager
+import com.matthewbennin.hatvdash.ui.rememberMdiIconBitmap
 import org.json.JSONObject
 
 @Composable
@@ -41,15 +42,8 @@ fun InputBooleanInfo(entityId: String, onDismiss: () -> Unit) {
     val isOn = remember(currentState) { currentState == "on" }
 
     var isFocused by remember { mutableStateOf(false) }
-    var iconBitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-    // Load MDI icon dynamically
-    LaunchedEffect(isOn) {
-        val tint = if (isOn) Color.Black.toArgb() else Color.White.toArgb()
-        MdiIconManager.loadOrFetchIcon(context, "mdi:power", tint) {
-            iconBitmap = it
-        }
-    }
+    val tintColor = remember(isOn) { if (isOn) Color.Black.toArgb() else Color.White.toArgb() }
+    val iconBitmap by rememberMdiIconBitmap("mdi:power", tintColor)
 
     Box(
         modifier = Modifier

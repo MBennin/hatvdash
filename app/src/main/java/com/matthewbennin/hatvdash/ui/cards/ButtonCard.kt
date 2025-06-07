@@ -17,6 +17,7 @@ import com.matthewbennin.hatvdash.MdiIconManager
 import com.matthewbennin.hatvdash.data.EntityStateManager
 import com.matthewbennin.hatvdash.logic.RemotePressHandler
 import com.matthewbennin.hatvdash.logic.handleInteraction
+import com.matthewbennin.hatvdash.ui.rememberMdiIconBitmap
 import com.matthewbennin.hatvdash.ui.rememberRemoteKeyInteractions
 import org.json.JSONObject
 
@@ -73,13 +74,7 @@ fun ButtonCard(
         }
     }
 
-    var iconBitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-    LaunchedEffect(mdiIcon, iconColor) {
-        MdiIconManager.loadOrFetchIcon(context, mdiIcon, iconColor.toArgb()) {
-            iconBitmap = it
-        }
-    }
+    val iconBitmap by rememberMdiIconBitmap(mdiIcon, iconColor.toArgb())
 
     Surface(
         modifier = modifier

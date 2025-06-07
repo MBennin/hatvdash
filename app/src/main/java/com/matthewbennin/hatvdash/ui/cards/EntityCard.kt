@@ -18,6 +18,7 @@ import com.matthewbennin.hatvdash.MdiIconManager
 import com.matthewbennin.hatvdash.data.EntityStateManager
 import com.matthewbennin.hatvdash.ui.rememberRemoteKeyInteractions
 import com.matthewbennin.hatvdash.logic.handleInteraction
+import com.matthewbennin.hatvdash.ui.rememberMdiIconBitmap
 import org.json.JSONObject
 
 @Composable
@@ -41,16 +42,10 @@ fun EntityCard(cardJson: JSONObject) {
     val name = cardJson.optString("name").ifBlank { fallbackName ?: "Entity" }
     val icon = if (!rawIcon.isNullOrBlank()) rawIcon else fallbackIcon ?: "mdi:alert-circle-outline"
     val state = stateJson?.optString("state") ?: "..."
-
-    var iconBitmap by remember { mutableStateOf<Bitmap?>(null) }
     val tintColor = MaterialTheme.colorScheme.primary.toArgb()
 
 
-    LaunchedEffect(icon) {
-        MdiIconManager.loadOrFetchIcon(context, icon, tintColor) {
-            iconBitmap = it
-        }
-    }
+    val iconBitmap by rememberMdiIconBitmap(icon, tintColor)
 
     // --- Interaction Defaults ---
     fun getActionOrDefault(key: String): JSONObject? {
