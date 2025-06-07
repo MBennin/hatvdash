@@ -1,6 +1,7 @@
 package com.matthewbennin.hatvdash.network
 
 import android.util.Log
+import android.net.Uri
 import com.matthewbennin.hatvdash.data.EntityStateManager
 import okhttp3.*
 import org.json.JSONArray
@@ -18,7 +19,14 @@ object HaWebSocketManager {
     private val pendingMessages = mutableListOf<String>()
 
     fun connect (baseUrl: String, token: String) {
-        val url = "ws://${baseUrl.removePrefix("http://")}/api/websocket"
+        // Support both http and https Home Assistant URLs
+        val uri = Uri.parse(baseUrl)
+        val scheme = if (uri.scheme == "https") "wss" else "ws"
+        val host = uri.host ?: baseUrl
+            .removePrefix("http://")
+            .removePrefix("https://")
+        val portPart = if (uri.port != -1) ":${uri.port}" else ""
+        val url = "$scheme://$host$portPart/api/websocket"
         val request = Request.Builder().url(url).build()
         val client = OkHttpClient()
 
